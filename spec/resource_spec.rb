@@ -214,6 +214,21 @@ RSpec.describe Graphiti::Resource do
           expect(klass.type).to eq(:blahs)
         end
       end
+
+      context "when id attribute definition is configured" do
+        before do
+          app_resource.class_eval do
+            self.id_attribute_definition = { type: :uuid, proc: -> { @object.gui } }
+          end
+        end
+
+        it "automatically adds id attribute from definition" do
+          expect(klass.attributes[:id]).to include(
+            proc: an_instance_of(Proc),
+            type: :uuid
+          )
+        end
+      end
     end
 
     describe "a descendent of a non-abstract Resource" do
@@ -582,8 +597,11 @@ RSpec.describe Graphiti::Resource do
     end
   end
 
-  it "automatically adds id attribute" do
-    expect(klass.attributes[:id]).to be_present
+  it "automatically adds id attribute with defaults" do
+    expect(klass.attributes[:id]).to include(
+      proc: nil,
+      type: :integer_id
+    )
   end
 
   describe ".attribute" do

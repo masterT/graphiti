@@ -83,6 +83,7 @@ module Graphiti
           :default_page_size,
           :default_sort,
           :max_page_size,
+          :id_attribute_definition,
           :attributes_readable_by_default,
           :attributes_writable_by_default,
           :attributes_sortable_by_default,
@@ -108,6 +109,7 @@ module Graphiti
           klass.serializer = (klass.serializer || klass.infer_serializer_superclass)
           klass.type ||= klass.infer_type
           klass.graphql_entrypoint = klass.type.to_s.pluralize.to_sym
+          klass.id_attribute_definition ||= { type: :integer_id, proc: nil }
           default(klass, :attributes_readable_by_default, true)
           default(klass, :attributes_writable_by_default, true)
           default(klass, :attributes_sortable_by_default, true)
@@ -119,7 +121,11 @@ module Graphiti
           default(klass, :filters_deny_empty_by_default, false)
 
           unless klass.config[:attributes][:id]
-            klass.attribute :id, :integer_id
+            klass.attribute(
+              :id,
+              klass.id_attribute_definition[:type],
+              &klass.id_attribute_definition[:proc]
+            )
           end
           klass.stat total: [:count]
 
@@ -156,6 +162,8 @@ module Graphiti
             self.serializer = nil
             self.type = nil
             self.graphql_entrypoint = nil
+
+            config[:attributes] = {}
           end
         end
 
